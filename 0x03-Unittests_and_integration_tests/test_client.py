@@ -10,22 +10,21 @@ from fixtures import TEST_PAYLOAD
 
 
 class TestGithubOrgClient(unittest.TestCase):
-    """Tests the `GithubOrgClient` class."""
+    """Tests for `GithubOrgClient` class."""
+
     @parameterized.expand([
         ("google", {'login': "google"}),
         ("abc", {'login': "abc"}),
     ])
-    @patch(
-        "client.get_json",
-    )
-    def test_org(self, org: str, resp: Dict, mocked_fxn: MagicMock) -> None:
-        """Tests the `org` method."""
-        mocked_fxn.return_value = MagicMock(return_value=resp)
-        gh_org_client = GithubOrgClient(org)
-        self.assertEqual(gh_org_client.org(), resp)
-        mocked_fxn.assert_called_once_with(
-            "https://api.github.com/orgs/{}".format(org)
-        )
+    @patch("client.get_json")
+    def test_org(self, org, resp, mock_get_json):
+        """Test `org` method."""
+        mock_get_json.return_value = resp
+        client = GithubOrgClient(org)
+        self.assertEqual(client.org(), resp)
+        mock_get_json.assert_called_once_with(
+            f"https://api.github.com/orgs/{org}"
+            )
 
     def test_public_repos_url(self):
         """Test `_public_repos_url` property."""
@@ -76,10 +75,11 @@ class TestGithubOrgClient(unittest.TestCase):
     },
 ])
 class TestIntegrationGithubOrgClient(unittest.TestCase):
-    """Performs integration tests for the `GithubOrgClient` class."""
+    """Integration tests for `GithubOrgClient`."""
+
     @classmethod
-    def setUpClass(cls) -> None:
-        """Sets up class fixtures before running tests."""
+    def setUpClass(cls):
+        """Set up mock requests for integration tests."""
         route_payload = {
             'https://api.github.com/orgs/google': cls.org_payload,
             'https://api.github.com/orgs/google/repos': cls.repos_payload,
